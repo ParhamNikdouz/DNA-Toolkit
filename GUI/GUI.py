@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
 import os
-#import other files.
+import sys
 
 
 class Defaults:
@@ -41,9 +41,9 @@ class MainMenu:
         self.filemenu.add_command(label="Exit", command=self.ask_quit)
 
         self.editmenu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label="Edit", menu=self.editmenu)
-        self.editmenu.add_command(label="Undo", command=self.do_nothing)
-        self.editmenu.add_command(label="Redo", command=self.do_nothing)
+        self.menubar.add_cascade(label="Edit")
+        self.editmenu.add_command(label="Undo")
+        self.editmenu.add_command(label="Redo")
 
         self.viewmenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="View", menu=self.viewmenu)
@@ -51,30 +51,40 @@ class MainMenu:
         self.viewmenu.add_command(label="Full Screen", command=self.fullscreen_id)
 
         self.runmenu = Menu(self.menubar, tearoff=0)
-        self.runmenu.add_command(label="Motif Count")
         self.menubar.add_cascade(label="Run", menu=self.runmenu)
+        self.runmenu.add_command(label="Motif Count")
         self.submenu = Menu(self.runmenu, tearoff=0)
-        self.childmenu = Menu(self.submenu, tearoff=0)
-        self.childmenu.add_command(label="2D")
-        self.childmenu.add_command(label="3D")
-        self.submenu.add_cascade(label="K-Means Clustering", menu=self.childmenu)
-        self.submenu.add_cascade(label="Mini-Batch K-Means", menu=self.childmenu)
-        self.submenu.add_cascade(label="Agglomerative Clustering", menu=self.childmenu)
-        self.submenu.add_cascade(label="Spectral Clustering", menu=self.childmenu)
-        self.submenu.add_cascade(label="Birch", menu=self.childmenu)
-        self.submenu.add_cascade(label="Fuzzy-CMeans", menu=self.childmenu)
-        self.submenu.add_cascade(label="Mixture Gaussian", menu=self.childmenu)
-        self.submenu.add_cascade(label="Affinity Propagation", menu=self.childmenu)
-        self.submenu.add_cascade(label="MeanShift", menu=self.childmenu)
         self.runmenu.add_cascade(label="Clustering", menu=self.submenu)
+        self.d2menu = Menu(self.submenu, tearoff=0)
+        self.submenu.add_cascade(label="2D", menu=self.d2menu)
+        self.d3menu = Menu(self.submenu, tearoff=0)
+        self.submenu.add_cascade(label="3D", menu=self.d3menu)
+        self.d2menu.add_command(label="K-Means Clustering")
+        self.d2menu.add_command(label="Mini-Batch K-Means")
+        self.d2menu.add_command(label="Agglomerative Clustering")
+        self.d2menu.add_command(label="Spectral Clustering")
+        self.d2menu.add_command(label="Birch")
+        self.d2menu.add_command(label="Fuzzy-CMeans")
+        self.d2menu.add_command(label="Mixture Gaussian")
+        self.d2menu.add_command(label="Affinity Propagation")
+        self.d2menu.add_command(label="Mean-Shift")
+
+        self.d3menu.add_command(label="K-Means Clustering")
+        self.d3menu.add_command(label="Mini-Batch K-Means")
+        self.d3menu.add_command(label="Agglomerative Clustering")
+        self.d3menu.add_command(label="Spectral Clustering")
+        self.d3menu.add_command(label="Birch")
+        self.d3menu.add_command(label="Fuzzy-CMeans")
+        self.d3menu.add_command(label="Affinity Propagation")
+        self.d3menu.add_command(label="Mean-Shift")
 
         self.toolsmenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Tools", menu=self.toolsmenu)
-        self.toolsmenu.add_command(label="Take A Note", command=self.do_nothing)
+        self.toolsmenu.add_command(label="Take A Note", command=self.take_a_note)
 
         self.helpmenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Help", menu=self.helpmenu)
-        self.helpmenu.add_command(label="How To Use?", command=self.do_nothing)
+        self.helpmenu.add_command(label="How To Use?")
         self.helpmenu.add_command(label="About Fasta File")
         self.helpmenu.add_command(label="About Us")
 
@@ -108,6 +118,11 @@ class MainMenu:
         self.root2 = Tk()
         menu_base2 = MainMenu(self.root2)
         self.root2.mainloop()
+    def take_a_note(self):
+        fw = open('take_a_note.txt','w')
+        fw.close()
+        fr = open('take_a_note.txt','r')
+        taken_note = fr.read()
 
 
 class Welcome:
