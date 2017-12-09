@@ -15,19 +15,18 @@ import skfuzzy as fuzz
 from matplotlib.colors import LogNorm
 from sklearn import mixture
 
-
-############################################################################################
-# Motif class                                                                               #
-# In this class we add motif file to motif list                                             #
-# You can print motifs, and get number of motifs in list                                    #
-# We can get count repeated motifs with Overlap in each sequence by bioPython library       #
-# Also we calculate sum of n-mers motifs in each sequnce for calculation frequency of motifs#
-############################################################################################
-
 class Motif():
     motifs = []
     numNmersMotifsDic = {}
     data_set = []  # Define variable for clustering
+    f1 = 0;
+    f2 = 1;
+    f3 = 2;
+    c1 = "";
+    c2 = "";
+    c3 = "";
+    my_dna = []
+    colors = np.array([]);  # except affinity
 
     # Initial method
     def __init__(self, fasta_addr, exel_addr):
@@ -37,6 +36,32 @@ class Motif():
         valueObj = Excel()  # Create object from excel class
         valueObj.openExcel(exel_addr);
         self.motifs = valueObj.values
+
+        self.f1 = 0;
+        self.f2 = 1;
+        self.f3 = 2;
+
+        self.c1 = "";
+        self.c2 = "";
+        self.c3 = "";
+
+        for i in range(len(self.sequences)):
+            dna = self.sequences[i]
+            self.my_dna.append(Seq(dna, generic_dna));
+
+        self.colors = np.array(list(islice(cycle(
+            ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#999999', '#e41a1c', '#dede00',
+             '#000000']), 10)));
+
+    def setPlotFields(self, sf1, sf2, sf3):
+        # s = [f11,f22,f33];
+        # s.sort();
+        # self.f1 = s[0]-1;
+        # self.f2 =s[1]-1;
+        # self.f3 = s[2]-1;
+        self.c1 = sf1;
+        self.c2 = sf2;
+        self.c3 = sf3;
 
     # Print motifs
     def printMotif(self):
@@ -68,42 +93,8 @@ class Motif():
                 # Number of repeat pattern
                 countMotifs[pattern] = []
                 countMotifs[pattern].append(my_dna.count_overlap(pattern))
-            print(countMotifs)
 
     # Calculate number of n-mers motifs in sequence
-    def gui_CountMotif(self,i):
-
-        import LIB.HTML as html
-
-        # print (self.motifs)
-
-        pattern = ''
-        countMotifsList = []
-
-        HTMLFILE = 'E:\MY CODES\PYTHON\DNA-Toolkit\htmlOutput\motifCount'+str(i)+'.html'
-        f = open(HTMLFILE, 'w')
-
-        t = html.Table(header_row=self.motifs)
-
-        # Length of motifs
-        #for i in range(3):
-        dna = self.sequences[i]
-        my_dna = Seq(dna, generic_dna)
-        countMotifs = []
-        for j in range(len(self.motifs)):
-            pattern = self.motifs[j]
-            # Number of repeat pattern
-            countMotifs.append(my_dna.count_overlap(pattern))
-        # countMotifsList.append(countMotifs)
-        t.rows.append(countMotifs)
-
-        htmlcode = str(t)
-        print(htmlcode)
-        f.write(htmlcode)
-        f.write('<p>')
-        print('-' * 79)
-
-
     def numNmersMotifs(self):
 
         pattern = ''
@@ -184,26 +175,40 @@ class Motif():
 
     def fill_dataSet(self, listOfMotifs):
         self.data_set.clear();
+
+        list_set = set(listOfMotifs);
+        lom = list(list_set);
         pattern = ''
         countMotifs = {}
         # self.motifList();
-        for i in range(len(self.sequences)):
-            dna = self.sequences[i]
-            my_dna = Seq(dna, generic_dna)
-
+        for i in range(len(self.my_dna)):
             for j in range(len(self.motifs)):
                 pattern = self.motifs[j]
-                if (pattern in listOfMotifs):
-                    countMotifs[pattern] = my_dna.count_overlap(pattern)
+                if (pattern in lom):
+                    countMotifs[pattern] = self.my_dna[i].count_overlap(pattern)
             self.data_set.append(countMotifs.copy())
+        if (self.c1 != ""):
+            lk = list(self.data_set[0].keys())
+            for i in range(0, len(lk)):
+                if (self.c1 == lk[i]):
+                    self.f1 = i;
+                if (self.c2 == lk[i]):
+                    self.f2 = i;
+                if (self.c3 == lk[i]):
+                    self.f3 = i;
+            ss = [self.f1, self.f2, self.f3];
+            ss.sort();
+            self.f1 = ss[0];
+            self.f2 = ss[1];
+            self.f3 = ss[2];
 
-    def plt_2d(self, A, f1, f2, Labels, title):
-        colors = np.array(list(islice(cycle(['#377eb8', '#ff7f00', '#4daf4a',
-                                             '#f781bf', '#a65628', '#984ea3',
-                                             '#999999', '#e41a1c', '#dede00', '#000000']), 10)));
+    def plt_2d(self, A, Labels, title):
+        # colors = np.array(list(islice(cycle(['#377eb8', '#ff7f00', '#4daf4a',
+        #                                      '#f781bf', '#a65628', '#984ea3',
+        #                                      '#999999', '#e41a1c', '#dede00', '#000000']), 10)));
         for i in range(len(A)):
             if (i < len(A)):
-                plt.plot(A[i][f1], A[i][f2], '.', color=colors[Labels[i]])
+                plt.plot(A[i][self.f1], A[i][self.f2], '.', color=self.colors[Labels[i]])
 
         plt.title(title);
         fig = plt.gcf()
@@ -211,30 +216,30 @@ class Motif():
         plt.ylabel('y', fontsize=20);
         plt.xlabel('x', fontsize=20);
 
-    def plt_3d(self, A, f1, f2, f3, Labels, l, title):
-        colors = np.array(list(islice(cycle(['#377eb8', '#ff7f00', '#4daf4a',
-                                             '#f781bf', '#a65628', '#984ea3',
-                                             '#999999', '#e41a1c', '#dede00', '#000000']), 10)));
+    def plt_3d(self, A, Labels, l, title):
+        # colors = np.array(list(islice(cycle(['#377eb8', '#ff7f00', '#4daf4a',
+        #                                      '#f781bf', '#a65628', '#984ea3',
+        #                                      '#999999', '#e41a1c', '#dede00', '#000000']), 10)));
 
         fig = plt.figure()
         ax = Axes3D(fig)
-        ax.set_title(title)
-        ax.set_ylabel("y")
-        ax.set_xlabel("x")
-        ax.set_zlabel("z")
+        ax.set_title(title);
+        ax.set_ylabel("y");
+        ax.set_xlabel("x");
+        ax.set_zlabel("z");
         fig = plt.gcf()
         fig.canvas.set_window_title("clustring by " + title + " algorithm(3D)");
         for i in range(0, len(l)):
-            ax.scatter(A[i][0], A[i][1], A[i][2], '.', color=colors[Labels[i]], s=5)
-        return ax
+            ax.scatter(A[i][self.f1], A[i][self.f2], A[i][self.f3], '.', color=self.colors[Labels[i]], s=5)
+        return ax;
 
     def clustring_kmeans(self, dem, listOfMotifs, n):
-        self.fill_dataSet(listOfMotifs)
+        self.fill_dataSet(listOfMotifs);
         l = []
         for rec in self.data_set:
-            l.append(list(rec.values()))
+            l.append(list(rec.values()));
 
-        A = np.array(l)
+        A = np.array(l);
 
         kmeans = sklearn.cluster.KMeans(n_clusters=n)
         kmeans.fit(A)
@@ -242,12 +247,12 @@ class Motif():
         Labels = kmeans.labels_
 
         if (dem == 2):
-            self.plt_2d(A, 0, 1, Labels, "KMeans");
-            plt.scatter(Centroids[:, 0], Centroids[:, 1], marker="x", s=100)
+            self.plt_2d(A, Labels, "KMeans");
+            plt.scatter(Centroids[:, self.f1], Centroids[:, self.f2], marker="x", s=100)
             plt.show()
         elif (dem == 3):
-            self.plt_3d(A, 0, 1, 2, Labels, l, "KMeans").scatter(Centroids[:, 0], Centroids[:, 1], Centroids[:, 2],
-                                                                 marker="x", s=100, c="black");
+            self.plt_3d(A, Labels, l, "KMeans").scatter(Centroids[:, self.f1], Centroids[:, self.f2],
+                                                        Centroids[:, self.f3], marker="x", s=100, c="black");
             plt.show()
         else:
             print("dem bad value");
@@ -265,14 +270,13 @@ class Motif():
         Centroids = mbk.cluster_centers_
         Labels = mbk.labels_
         if (dem == 2):
-            self.plt_2d(A, 0, 1, Labels, "MiniBatchKMeans");
-            plt.scatter(Centroids[:, 0], Centroids[:, 1], marker="x", s=100)
+            self.plt_2d(A, Labels, "MiniBatchKMeans");
+            plt.scatter(Centroids[:, self.f1], Centroids[:, self.f2], marker="x", s=100)
             plt.show()
 
         elif (dem == 3):
-            self.plt_3d(A, 0, 1, 2, Labels, l, "MiniBatchKMeans").scatter(Centroids[:, 0], Centroids[:, 1],
-                                                                          Centroids[:, 2], marker="x", s=100,
-                                                                          c="black");
+            self.plt_3d(A, Labels, l, "MiniBatchKMeans").scatter(Centroids[:, self.f1], Centroids[:, self.f2],
+                                                                 Centroids[:, self.f3], marker="x", s=100, c="black");
             plt.show()
         else:
             print("dem bad value");
@@ -291,10 +295,10 @@ class Motif():
 
         if (dem == 2):
             figg = plt.figure();
-            self.plt_2d(A, 0, 1, Labels, "Agglomerative");
+            self.plt_2d(A, Labels, "Agglomerative");
             plt.show()
         elif (dem == 3):
-            self.plt_3d(A, 0, 1, 2, Labels, l, "Agglomerative");
+            self.plt_3d(A, Labels, l, "Agglomerative");
             plt.show()
         else:
             print("dem bad value");
@@ -313,10 +317,10 @@ class Motif():
 
         if (dem == 2):
             figg = plt.figure();
-            self.plt_2d(A, 0, 1, Labels, "Spectral");
+            self.plt_2d(A, Labels, "Spectral");
             plt.show()
         elif (dem == 3):
-            self.plt_3d(A, 0, 1, 2, Labels, l, "Spectral");
+            self.plt_3d(A, Labels, l, "Spectral");
             plt.show()
         else:
             print("dem bad value");
@@ -334,10 +338,10 @@ class Motif():
         Labels = agg.labels_
 
         if (dem == 2):
-            self.plt_2d(A, 0, 1, Labels, "Birch");
+            self.plt_2d(A, Labels, "Birch");
             plt.show()
         elif (dem == 3):
-            self.plt_3d(A, 0, 1, 2, Labels, l, "Birch")
+            self.plt_3d(A, Labels, l, "Birch")
             plt.show()
         else:
             print("dem bad value");
@@ -349,37 +353,63 @@ class Motif():
             l.append(list(rec.values()));
         A = np.array(l);
 
-        colors = ['b', 'orange', 'g', 'r', 'c', 'm', 'y', 'k', 'Brown', 'ForestGreen']
+        # colors = ['b', 'orange', 'g', 'r', 'c', 'm', 'y', 'k', 'Brown', 'ForestGreen']
+        ss = set(listOfMotifs);
+        lo = list(ss);
+        if (len(lo) == 2):
+            alldata = np.vstack(((A[:, 0:1]).ravel(), (A[:, 1:2]).ravel()))
+        elif (len(lo) == 3):
+            alldata = np.vstack(((A[:, 0:1]).ravel(), (A[:, 1:2]).ravel(), (A[:, 2:3]).ravel()))
+        elif (len(lo) == 4):
+            alldata = np.vstack(((A[:, 0:1]).ravel(), (A[:, 1:2]).ravel(), (A[:, 2:3]).ravel(), (A[:, 3:4]).ravel()))
+        elif (len(lo) == 5):
+            alldata = np.vstack(((A[:, 0:1]).ravel(), (A[:, 1:2]).ravel(), (A[:, 2:3]).ravel(), (A[:, 3:4]).ravel(),
+                                 (A[:, 4:5]).ravel()))
+        elif (len(lo) == 6):
+            alldata = np.vstack(((A[:, 0:1]).ravel(), (A[:, 1:2]).ravel(), (A[:, 2:3]).ravel(), (A[:, 3:4]).ravel(),
+                                 (A[:, 4:5]).ravel(), (A[:, 5:6]).ravel()))
+        elif (len(lo) == 7):
+            alldata = np.vstack(((A[:, 0:1]).ravel(), (A[:, 1:2]).ravel(), (A[:, 2:3]).ravel(), (A[:, 3:4]).ravel(),
+                                 (A[:, 4:5]).ravel(), (A[:, 5:6]).ravel(), (A[:, 6:7]).ravel()))
+        elif (len(lo) == 8):
+            alldata = np.vstack(((A[:, 0:1]).ravel(), (A[:, 1:2]).ravel(), (A[:, 2:3]).ravel(), (A[:, 3:4]).ravel(),
+                                 (A[:, 4:5]).ravel(), (A[:, 5:6]).ravel(), (A[:, 6:7]).ravel(), (A[:, 7:8]).ravel()))
+        elif (len(lo) == 9):
+            alldata = np.vstack(((A[:, 0:1]).ravel(), (A[:, 1:2]).ravel(), (A[:, 2:3]).ravel(), (A[:, 3:4]).ravel(),
+                                 (A[:, 4:5]).ravel(), (A[:, 5:6]).ravel(), (A[:, 6:7]).ravel(), (A[:, 7:8]).ravel(),
+                                 (A[:, 8:9]).ravel()))
+        elif (len(lo) == 10):
+            alldata = np.vstack(((A[:, 0:1]).ravel(), (A[:, 1:2]).ravel(), (A[:, 2:3]).ravel(), (A[:, 3:4]).ravel(),
+                                 (A[:, 4:5]).ravel(), (A[:, 5:6]).ravel(), (A[:, 6:7]).ravel(), (A[:, 7:8]).ravel(),
+                                 (A[:, 8:9]).ravel(), (A[:, 9:10]).ravel()))
+        else:
+            print("dem bad value");
+        fpcs = []
 
         xpts = np.array([]);
         ypts = np.array([]);
         zpts = np.array([]);
         for i in range(0, len(l)):
             ll = []
-            ll.append(l[i][0]);
+            ll.append(l[i][self.f1]);
             xpts = np.append(xpts, ll.copy());
             ll = []
-            ll.append(l[i][1]);
+            ll.append(l[i][self.f2]);
             ypts = np.append(ypts, ll.copy());
-            ll = []
-            ll.append(l[i][2]);
-            zpts = np.append(zpts, ll.copy());
-        if (dem == 2):
-            alldata = np.vstack((xpts, ypts))
-        elif (dem == 3):
-            alldata = np.vstack((xpts, ypts, zpts));
-        else:
-            print("dem bad value");
-        fpcs = []
+            if (len(listOfMotifs) > 2):
+                ll = []
+                ll.append(l[i][self.f3]);
+                zpts = np.append(zpts, ll.copy());
+
         cntr, u, u0, d, jm, p, fpc = fuzz.cluster.cmeans(alldata, n, 4, error=0.005, maxiter=1000, init=None)
         fpcs.append(fpc)
         cluster_membership = np.argmax(u, axis=0)
 
         if (dem == 2):
             for j in range(n):
-                plt.plot(xpts[cluster_membership == j], ypts[cluster_membership == j], '.', color=colors[j],
+                plt.plot(xpts[cluster_membership == j], ypts[cluster_membership == j], '.', color=self.colors[j],
                          markersize=5)
-            plt.scatter(cntr[:, 0], cntr[:, 1], marker="x", s=100)
+            plt.scatter(cntr[:, self.f1], cntr[:, self.f2], marker="x", s=100)
             plt.title("Fuzzy-cmeans");
             fig = plt.gcf()
             fig.canvas.set_window_title("clustring by " + "Fuzzy-cmeans" + " algorithm(2D)");
@@ -396,8 +426,8 @@ class Motif():
             fig.canvas.set_window_title("clustring by " + "Fuzzy-cmeans" + " algorithm(3D)");
             for j in range(n):
                 ax.plot(xpts[cluster_membership == j], ypts[cluster_membership == j], zpts[cluster_membership == j],
-                        '.', color=colors[j], markersize=5)
-            ax.scatter(cntr[:, 0], cntr[:, 1], cntr[:, 2], marker="x", s=100)
+                        '.', color=self.colors[j], markersize=5)
+            ax.scatter(cntr[:, self.f1], cntr[:, self.f2], cntr[:, self.f3], marker="x", s=100)
         else:
             print("dem bad value");
         plt.show();
@@ -409,7 +439,7 @@ class Motif():
             l.append(list(rec.values()));
 
         A = np.array(l);
-        t = A[0:89, 0:2]
+        t = A[:, self.f1:self.f1 + 2]
         clf = mixture.GaussianMixture(n_components=n, covariance_type='full')
         clf.fit(t);
 
@@ -461,11 +491,11 @@ class Motif():
             for k, col in zip(range(n_clusters_), colors):
                 class_members = labels == k
                 cluster_center = A[cluster_centers_indices[k]]
-                plt.plot(A[class_members, 0], A[class_members, 1], col + '.')
-                plt.plot(cluster_center[0], cluster_center[1], markerfacecolor=col,
+                plt.plot(A[class_members, self.f1], A[class_members, self.f2], col + '.')
+                plt.plot(cluster_center[self.f1], cluster_center[self.f2], markerfacecolor=col,
                          markeredgecolor='k', markersize=14)
                 for x in A[class_members]:
-                    plt.plot([cluster_center[0], x[0]], [cluster_center[1], x[1]], col)
+                    plt.plot([cluster_center[self.f1], x[self.f1]], [cluster_center[self.f2], x[self.f2]], col)
             plt.show()
         elif (dem == 3):
             fig = plt.figure()
@@ -481,9 +511,11 @@ class Motif():
             for k, col in zip(range(n_clusters_), colors):
                 class_members = labels == k
                 cluster_center = A[cluster_centers_indices[k]]
-                ax.scatter(A[class_members, 0], A[class_members, 1], A[class_members, 2], '.', s=7)
+                ax.scatter(A[class_members, self.f1], A[class_members, self.f2], A[class_members, self.f3], '.',
+                           color=col, s=7)
                 for x in A[class_members]:
-                    plt.plot([cluster_center[0], x[0]], [cluster_center[1], x[1]], [cluster_center[2], x[2]], col)
+                    plt.plot([cluster_center[self.f1], x[self.f1]], [cluster_center[self.f2], x[self.f2]],
+                             [cluster_center[self.f3], x[self.f3]], col)
             plt.show()
         else:
             print("dem bad value");
@@ -504,7 +536,7 @@ class Motif():
         labels_unique = np.unique(labels)
         n_clusters_ = len(labels_unique)
 
-        colors = cycle('bgrcmykbgrcmykbgrcmykbgrcmyk')
+        # colors = cycle('bgrcmykbgrcmykbgrcmykbgrcmyk')
         if (dem == 2):
             plt.title("MeanShift\nEstimated number of clusters: " + str(n_clusters_));
             fig = plt.gcf()
@@ -512,11 +544,11 @@ class Motif():
             plt.ylabel('y', fontsize=20);
             plt.xlabel('x', fontsize=20);
 
-            for k, col in zip(range(n_clusters_), colors):
+            for k, col in zip(range(n_clusters_), self.colors):
                 my_members = labels == k
                 cluster_center = cluster_centers[k]
-                plt.plot(A[my_members, 0], A[my_members, 1], col + '.')
-                plt.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col,
+                plt.plot(A[my_members, self.f1], A[my_members, self.f2], '.', color=col)
+                plt.plot(cluster_center[self.f1], cluster_center[self.f2], 'o', markerfacecolor=col,
                          markeredgecolor='k', markersize=14)
         elif (dem == 3):
             fig = plt.figure()
@@ -528,21 +560,13 @@ class Motif():
             fig = plt.gcf()
             fig.canvas.set_window_title("clustring by " + "MeanShift" + " algorithm(3D)");
 
-            for k, col in zip(range(n_clusters_), colors):
+            for k, col in zip(range(n_clusters_), self.colors):
                 class_members = labels == k
                 cluster_center = cluster_centers[k]
-                ax.scatter(A[class_members, 0], A[class_members, 1], A[class_members, 2], '.', s=7)
-                ax.scatter(cluster_center[0], cluster_center[1], cluster_center[2], 'o', color='k')
+                ax.scatter(A[class_members, self.f1], A[class_members, self.f2], A[class_members, self.f3], '.',
+                           color=col, s=7)
+                ax.scatter(cluster_center[self.f1], cluster_center[self.f2], cluster_center[self.f3], 'o', color='k')
             plt.show()
         else:
             print("dem bad value");
         plt.show()
-
-
-#f = Motif('E:\MY CODES\PYTHON\DNA-Toolkit\IMPORT-FILES\ebola.fasta',
-          #'E:\MY CODES\PYTHON\DNA-Toolkit\IMPORT-FILES\motif_count.xlsx')
-#ll = ["A", "G", "GAC", "GGGA", "GAGA", "AACCC", "GACGA", "CCAGT", "GGCCA", "CGCAG", "CTCTA", "AACGG"]
-#f.clustring_meanshift(3, ll)
-
-
-
