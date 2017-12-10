@@ -1,11 +1,8 @@
-from __future__ import division #Import for calculate divide
-from Bio.Seq import Seq #Import Sequence BioPython
-from Bio.Alphabet import generic_dna
-
 ####################################
 #File class                        #
 #This class Open and Print any file#
 ####################################
+
 
 class File:
 

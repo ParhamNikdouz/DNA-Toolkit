@@ -151,9 +151,9 @@ class TableCell (object):
             # An empty cell should at least contain a non-breaking space
             text = '0'
         if self.header:
-            return '  <TH%s>%s</TH>\n' % (attribs_str, text)
+            return '  <TH%s>%s</TH>' % (attribs_str, text)
         else:
-            return '  <TD%s>%s</TD>\n' % (attribs_str, text)
+            return '  <TD%s>%s</TD>' % (attribs_str, text)
 
 #-------------------------------------------------------------------------------
 

@@ -1,12 +1,13 @@
-from ALGORITHM.fileClass import File  # Import File Class
-from ALGORITHM.sequenceClass import Sequence  # Import Fasta Class
-from ALGORITHM.excelClass import Excel  # Import Fasta Class
+from Algorithm.fileClass import File  # Import File Class
+from Algorithm.sequenceClass import Sequence  # Import Fasta Class
+from Algorithm.excelClass import Excel  # Import Fasta Class
 from Bio.Seq import Seq  # Import Sequence BioPython
 from Bio.Alphabet import generic_dna
+import webbrowser
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import style
-
+import importedLibraries.Html as html
 style.use("ggplot")
 import sklearn.cluster
 from mpl_toolkits.mplot3d import Axes3D
@@ -15,18 +16,20 @@ import skfuzzy as fuzz
 from matplotlib.colors import LogNorm
 from sklearn import mixture
 
+
+
 class Motif():
     motifs = []
     numNmersMotifsDic = {}
     data_set = []  # Define variable for clustering
-    f1 = 0;
-    f2 = 1;
-    f3 = 2;
-    c1 = "";
-    c2 = "";
-    c3 = "";
+    f1 = 0
+    f2 = 1
+    f3 = 2
+    c1 = ""
+    c2 = ""
+    c3 = ""
     my_dna = []
-    colors = np.array([]);  # except affinity
+    colors = np.array([])  # except affinity
 
     # Initial method
     def __init__(self, fasta_addr, exel_addr):
@@ -52,7 +55,10 @@ class Motif():
         self.colors = np.array(list(islice(cycle(
             ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#999999', '#e41a1c', '#dede00',
              '#000000']), 10)));
-
+    def resetF(self):
+        self.f1 = 0;
+        self.f2 = 1;
+        self.f3 = 2;
     def setPlotFields(self, sf1, sf2, sf3):
         # s = [f11,f22,f33];
         # s.sort();
@@ -77,8 +83,9 @@ class Motif():
     def getLenMotif(self):
         print(len(self.motifs))
 
-    # Calculate count of motifs in sequence with overlap
-    def countMotif(self):
+        # Calculate count of motifs in sequence with overlap in command mode
+
+    def terminal_CountMotif(self):
 
         pattern = ''
         countMotifs = {}
@@ -88,13 +95,46 @@ class Motif():
             dna = self.sequences[i]
             my_dna = Seq(dna, generic_dna)
 
-            for j in range(len(self.motifs)):
+            for j in range(1, len(self.motifs)):
                 pattern = self.motifs[j]
                 # Number of repeat pattern
                 countMotifs[pattern] = []
                 countMotifs[pattern].append(my_dna.count_overlap(pattern))
+            print(countMotifs)
 
-    # Calculate number of n-mers motifs in sequence
+            # Calculate count of motifs in sequence with overlap in GUI mode
+
+    def gui_CountMotif(self):
+
+        pattern = ''
+        countMotifsList = []
+
+        HTMLFILE = 'E:\MY CODES\PYTHON\DNA-Toolkit\Html-Output\motifCount.html'
+        f = open(HTMLFILE, 'w')
+
+        t = html.Table(header_row=self.motifs)
+
+        # Length of motifs
+        for i in range(len(self.sequences)):
+            dna = self.sequences[i]
+            my_dna = Seq(dna, generic_dna)
+            countMotifs = []
+            countMotifs.append('<b>' + str(i + 1) + '</b>')  # number of sequence in table
+
+            for j in range(1, len(self.motifs)):
+                pattern = self.motifs[j]
+                # Number of repeat pattern
+                countMotifs.append(my_dna.count_overlap(pattern))
+            t.rows.append(countMotifs)
+
+        htmlcode = str(t)
+        # print (htmlcode)
+        f.write(htmlcode)
+        f.write('<p>')
+        #print('Done' + '-' * 79)
+        webbrowser.open(HTMLFILE)
+        # Calculate number of n-mers motifs in sequence
+
     def numNmersMotifs(self):
 
         pattern = ''
@@ -104,9 +144,9 @@ class Motif():
             dna = self.sequences[i]
             my_dna = Seq(dna, generic_dna)
 
-            summ = [0] * 5;  # Define summ variable
+            summ = [0] * 5  # Define summ variable
 
-            for j in range(len(self.motifs)):
+            for j in range(1, len(self.motifs)):
                 pattern = self.motifs[j]
                 countMotifs[pattern] = []
                 countMotifs[pattern].append(my_dna.count_overlap(pattern))
@@ -134,8 +174,10 @@ class Motif():
             self.numNmersMotifsDic[i].append(summ[3])
             self.numNmersMotifsDic[i].append(summ[4])
 
-    # Calculate Frequency of motifs in sequence
-    def frequencyMotifs(self):
+
+            # Calculate Frequency of motifs in sequence
+
+    def terminal_FrequencyMotifs(self):
         pattern = ''
         countMotifs = {}
 
@@ -144,11 +186,10 @@ class Motif():
             my_dna = Seq(dna, generic_dna)
             print('Sequence', i + 1)
 
-            for j in range(len(self.motifs)):
+            for j in range(1, len(self.motifs)):
                 pattern = self.motifs[j]
                 countMotifs[pattern] = []
                 countMotifs[pattern].append(my_dna.count_overlap(pattern))
-            # data_set.append(countMotifs)
 
             for key, value in countMotifs.items():
                 if (len(key) == 1):
@@ -172,6 +213,72 @@ class Motif():
                     temp = value[0]
                     percentage = '%.2f' % ((temp / self.numNmersMotifsDic[i][4]) * 100)
                     print('Frequency of', key, '==>', percentage, '%')
+
+                    # Calculate Frequency of motifs in sequence in GUI mode
+
+    def gui_FrequencyMotifs(self):
+
+        pattern = ''
+        countMotifs = {}
+        percentage = ''
+
+        HTMLFILE = 'E:\MY CODES\PYTHON\DNA-Toolkit\Html-Output\motifFrequency.html'
+        f = open(HTMLFILE, 'w')
+
+        t = html.Table(header_row=self.motifs)
+
+        for i in range(len(self.sequences)):
+            dna = self.sequences[i]
+            my_dna = Seq(dna, generic_dna)
+            frequencyMotifsList = []
+            frequencyMotifsList.append('<b>' + str(i + 1) + '</b>')  # number of sequence in table
+
+            for j in range(1, len(self.motifs)):
+                pattern = self.motifs[j]
+                countMotifs[pattern] = []
+                countMotifs[pattern].append(my_dna.count_overlap(pattern))
+
+            for key, value in countMotifs.items():
+                if (len(key) == 1):
+                    temp = value[0]  # This is a list
+                    percentage = '%.2f' % (
+                    (temp / self.numNmersMotifsDic[i][0]) * 100)  # Caculate Percentage and show 2 decimal
+                    percentage = str(percentage) + '%'
+                    frequencyMotifsList.append(percentage)
+
+                elif (len(key) == 2):
+                    temp = value[0]
+                    percentage = '%.2f' % ((temp / self.numNmersMotifsDic[i][1]) * 100)
+                    percentage = str(percentage) + '%'
+                    frequencyMotifsList.append(percentage)
+
+                elif (len(key) == 3):
+                    temp = value[0]
+                    percentage = '%.2f' % ((temp / self.numNmersMotifsDic[i][2]) * 100)
+                    percentage = str(percentage) + '%'
+                    frequencyMotifsList.append(percentage)
+
+                elif (len(key) == 4):
+                    temp = value[0]
+                    percentage = '%.2f' % ((temp / self.numNmersMotifsDic[i][3]) * 100)
+                    percentage = str(percentage) + '%'
+                    frequencyMotifsList.append(percentage)
+
+                elif (len(key) == 5):
+                    temp = value[0]
+                    percentage = '%.2f' % ((temp / self.numNmersMotifsDic[i][4]) * 100)
+                    percentage = str(percentage) + '%'
+                    frequencyMotifsList.append(percentage)
+
+            t.rows.append(frequencyMotifsList)
+
+        htmlcode = str(t)
+        # print (htmlcode)
+        f.write(htmlcode)
+        f.write('<p>')
+        #print('Done' + '-' * 79)
+        webbrowser.open(HTMLFILE)
+
 
     def fill_dataSet(self, listOfMotifs):
         self.data_set.clear();

@@ -1,4 +1,4 @@
-from ALGORITHM.fileClass import File #Import File Class
+from Algorithm.fileClass import File #Import File Class
 
 ################################################################################
 #Sequence class                                                                #

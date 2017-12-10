@@ -12,6 +12,8 @@ class Excel:
 
     #Open execl file
     def openExcel(self, addr):
+
+        self.values.append('#') #Add space character !!!!!!
         wb = open_workbook(addr)
 
         for sheet in wb.sheets():
